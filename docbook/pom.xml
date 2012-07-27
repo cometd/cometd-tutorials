@@ -1,0 +1,85 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
+    <parent>
+        <groupId>org.cometd.documentation</groupId>
+        <artifactId>cometd-tutorials-project</artifactId>
+        <version>2.5.0</version>
+    </parent>
+
+    <modelVersion>4.0.0</modelVersion>
+    <artifactId>cometd-tutorials-docbook</artifactId>
+    <name>CometD Tutorials :: DocBook</name>
+    <packaging>pom</packaging>
+
+    <build>
+        <defaultGoal>install</defaultGoal>
+        <plugins>
+            <plugin>
+                <groupId>com.agilejava.docbkx</groupId>
+                <artifactId>docbkx-maven-plugin</artifactId>
+                <version>2.0.13</version>
+                <executions>
+                    <execution>
+                        <id>tutorials</id>
+                        <phase>compile</phase>
+                        <goals>
+                            <goal>generate-xhtml</goal>
+                        </goals>
+                        <configuration>
+                            <includes>book.xml</includes>
+                            <chunkedOutput>false</chunkedOutput>
+                            <htmlStylesheet>cometd.css</htmlStylesheet>
+                            <xhtmlCustomization>${basedir}/src/docbkx/custom-xhtml.xsl</xhtmlCustomization>
+                            <postProcess>
+                                <copy todir="${project.build.directory}/docbkx/xhtml">
+                                    <fileset dir="src/docbkx/css">
+                                        <include name="*.css" />
+                                    </fileset>
+                                </copy>
+                                <copy todir="${project.build.directory}/docbkx/xhtml">
+                                    <fileset dir="src/docbkx/images">
+                                        <include name="*.*" />
+                                    </fileset>
+                                </copy>
+                            </postProcess>
+                        </configuration>
+                    </execution>
+                </executions>
+                <configuration>
+                    <generatedSourceDirectory>${project.build.directory}/docbkx/generated</generatedSourceDirectory>
+                    <xincludeSupported>true</xincludeSupported>
+                    <paperType>A4</paperType>
+                    <sectionAutolabel>true</sectionAutolabel>
+                    <generateToc>
+                        book toc,title,figure,table,example
+                        chapter toc
+                    </generateToc>
+                </configuration>
+                <dependencies>
+                    <dependency>
+                        <groupId>net.sf.docbook</groupId>
+                        <artifactId>docbook-xml</artifactId>
+                        <version>5.0-all</version>
+                        <classifier>resources</classifier>
+                        <type>zip</type>
+                        <scope>runtime</scope>
+                    </dependency>
+                    <dependency>
+                        <groupId>net.sf.xslthl</groupId>
+                        <artifactId>xslthl</artifactId>
+                        <version>2.0.1</version>
+                        <scope>runtime</scope>
+                    </dependency>
+                    <dependency>
+                        <groupId>net.sf.offo</groupId>
+                        <artifactId>fop-hyph</artifactId>
+                        <version>1.2</version>
+                        <scope>runtime</scope>
+                    </dependency>
+                </dependencies>
+            </plugin>
+        </plugins>
+    </build>
+
+</project>

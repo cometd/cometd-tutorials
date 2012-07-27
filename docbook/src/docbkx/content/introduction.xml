@@ -1,0 +1,182 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<chapter version="5.0"
+         xmlns="http://docbook.org/ns/docbook"
+         xmlns:xl="http://www.w3.org/1999/xlink"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://docbook.org/ns/docbook http://www.docbook.org/xml/5.0/xsd/docbook.xsd
+                             http://www.w3.org/1999/xlink http://docbook.org/xml/5.0/xsd/xlink.xsd"
+         xml:id="introduction">
+<info>
+    <title>Introduction</title>
+</info>
+<para>
+    Welcome to the CometD tutorials, a place where you will learn to write your CometD applications step by step.
+</para>
+<para>
+    The CometD tutorials are the companion of <?reference?>.
+    Please refer also to <?reference?> for further details about the CometD API usage.
+</para>
+
+<section xml:id="introduction_requirements">
+<info>
+    <title>Requirements</title>
+</info>
+<para>
+    The CometD tutorials require you to install the following tools:
+</para>
+<itemizedlist>
+<listitem>
+<para>
+    The
+    <link xl:href="http://www.oracle.com/technetwork/java"><trademark>Java</trademark> Development Kit (JDK)</link>,
+    version 1.5 or greater
+</para>
+</listitem>
+<listitem>
+<para>
+    <link xl:href="http://maven.apache.org">Apache Maven</link>, version 3 or greater
+</para>
+</listitem>
+<listitem>
+<para>
+    <link xl:href="http://git-scm.com">Git</link>, the distributed version control system
+</para>
+</listitem>
+</itemizedlist>
+<para>
+    Even if you do not use Maven and/or Git in your organization, using Maven and Git in the tutorials
+    will provide you with complete projects that you can use as the basis for your projects: just copy
+    the tutorial project built with Maven, eventually accommodating it to your project structure.
+</para>
+
+<para>
+    First, install the JDK into the directory of your choice.
+    To verify that the Java installation completed correctly, issue this command:
+</para>
+<screen>
+$ java -version
+</screen>
+<para>
+    You should obtain an output similar to the following:
+</para>
+<screen>
+java version "1.7.0_04"
+Java(TM) SE Runtime Environment (build 1.7.0_04-b20)
+Java HotSpot(TM) 64-Bit Server VM (build 23.0-b21, mixed mode)
+</screen>
+<para>
+    Next, install Maven into the directory of your choice.
+    To verify that the installation of Maven completed correctly, issue this command:
+</para>
+<screen>
+$ mvn -version
+</screen>
+<para>
+    You should obtain an output similar to the following:
+</para>
+<screen>
+Apache Maven 3.0.4 (r1232337; 2012-01-17 09:44:56+0100)
+Maven home: /home/simon/programs/maven
+Java version: 1.7.0_04, vendor: Oracle Corporation
+Java home: /home/cometd/jdk1.7.0_04/jre
+Default locale: en_US, platform encoding: UTF-8
+OS name: "linux", version: "3.2.0-24-generic", arch: "amd64", family: "unix"
+</screen>
+<para>
+    Make sure that the "Java home" found by Maven (fourth line) points to the JDK directory (or a subdirectory).
+</para>
+<para>
+    Next, install Git into the directory of your choice.
+    To verify that the installation of Git completed correctly, issue this command:
+</para>
+<screen>
+$ git --version
+</screen>
+<para>
+    You should obtain an output similar to the following:
+</para>
+<screen>
+git version 1.7.9.5
+</screen>
+</section>
+
+<section>
+<info>
+    <title>Additional Tools</title>
+</info>
+<para>
+    CometD projects require server-side development in Java. We recommend that you use an IDE
+    such as <link xl:href="http://jetbrains.com/idea">IntelliJ IDEA</link>,
+    <link xl:href="http://netbeans.org">NetBeans</link>, or <link xl:href="http://eclipse.org">Eclipse</link>.
+</para>
+<para>
+    CometD projects require also client-side development, usually in JavaScript, running on a browser.
+    You must be able to verify, in the browser, if your code is running as expected, and we recommend
+    that you use tools such as <link xl:href="http://getfirebug.com/">Firebug</link>
+    (if you're using Firefox for development), or the equivalent for Internet Explorer (version 8 or greater),
+    called <link xl:href="http://msdn.microsoft.com/en-us/library/dd565622(VS.85).aspx">Developer Tools</link>.
+    Google's Chromium/Chrome browser has a built-in tool that is accessible from the "Tools" menu of the browser.
+</para>
+<important>
+<info>
+    <title>Windows Users</title>
+</info>
+<para>
+    If you are working in the Windows OS, avoid at all costs using a path that contains spaces,
+    such as "C:\Document And Settings\", as your base path.
+    Use a base path such as "C:\jdk1.7.0_04\" or "C:\apache-maven-3.0.4\", etc. instead.
+</para>
+</important>
+</section>
+
+<section>
+<info>
+    <title>Tutorials Pre-Made Artifacts</title>
+</info>
+<para>
+    CometD applications are standard Java Enterprise (<trademark>JEE</trademark>) web applications.
+    A CometD tutorial produces a CometD application and, in order to see it in action, you need to
+    package the resulting JEE web application and deploy it to a JEE servlet container.
+</para>
+<para>
+    In order to create and run a CometD tutorial web application, you need to figure out its library dependencies,
+    package it and deploy it. Each of these tasks may be complicated and time consuming.
+</para>
+<para>
+    In order to simplify these tasks, the CometD tutorials will make use of tools and pre-made artifacts,
+    so that you can focus on the tutorial details rather than spending time to figure out
+    the library dependencies needed to properly package a CometD web application.
+    In particular:
+</para>
+<itemizedlist>
+<listitem>
+<para>Maven, to resolve library dependencies</para>
+</listitem>
+<listitem>
+<para>
+    A skeleton web application, that will be used as the basis for the CometD tutorials; this skeleton
+    web application contains a pre-configured <code>web.xml</code>, the logging configuration, a skeleton
+    JSP page, the libraries needed to run the CometD server and the
+    <link xl:href="http://dojotoolkit.org">Dojo Toolkit</link> libraries needed by the CometD client.
+</para>
+<para>
+    The tutorial skeleton web application is not a CometD web application, in that it does not establish
+    a connection between the CometD client and the CometD server. This step is explained and performed in
+    the tutorials.
+</para>
+</listitem>
+<listitem>
+<para>
+    The Jetty Maven plugin, that allows you to start Jetty and deploy your CometD web application
+    with just one command.
+</para>
+</listitem>
+</itemizedlist>
+<para>
+    The tutorials will provide detailed information on how to use the tools and how to retrieve the pre-made
+    artifacts needed.
+</para>
+
+</section>
+
+</chapter>

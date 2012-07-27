@@ -1,0 +1,454 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<chapter version="5.0"
+         xmlns="http://docbook.org/ns/docbook"
+         xmlns:xl="http://www.w3.org/1999/xlink"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://docbook.org/ns/docbook http://www.docbook.org/xml/5.0/xsd/docbook.xsd
+                             http://www.w3.org/1999/xlink http://docbook.org/xml/5.0/xsd/xlink.xsd"
+         xml:id="client-hello">
+<info>
+    <title>Tutorial: Client-Side Hello World</title>
+</info>
+<section>
+<info>
+    <title>Introduction</title>
+</info>
+<para>
+    In this CometD tutorial you will learn how to send a "Hello, World" message from the CometD client
+    to the CometD server.
+    In doing this, you will primarily learn how to use the CometD JavaScript API, although you will see also
+    how to setup a server-side service that listens to the "Hello, World" message.
+</para>
+</section>
+
+<section>
+<info>
+    <title>Requirements</title>
+</info>
+<para>
+    See <xref linkend="introduction_requirements" />.
+</para>
+</section>
+
+<section>
+<info>
+    <title>Step 1: Setting up the Project</title>
+</info>
+<para>
+    Start by cloning the skeleton tutorial project into the <code>client-hello</code> directory.
+    Open a terminal window and type the following commands:
+</para>
+<screen>
+$ git clone http://github.com/cometd/tutorials-skeleton client-hello
+$ cd client-hello
+</screen>
+<para>
+    The tutorial will modify the skeleton project, enriching it with the code and configuration needed
+    by this tutorial.
+</para>
+<para>
+    Modify the <code>project/artifactId</code> element in the <code>pom.xml</code> file from:
+</para>
+<informalexample>
+<programlisting language="xml">
+&lt;?xml version="1.0" encoding="UTF-8"?&gt;
+&lt;project xmlns="http://maven.apache.org/POM/4.0.0"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd"&gt;
+    ...
+    &lt;artifactId&gt;<emphasis>cometd-tutorials-skeleton</emphasis>&lt;/artifactId&gt;
+    ...
+&lt;/project&gt;
+</programlisting>
+</informalexample>
+<para>
+    to:
+</para>
+<programlisting language="xml"><![CDATA[
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+    ...
+    <artifactId>client-hello</artifactId>
+    ...
+</project>
+]]></programlisting>
+<para>
+    In this way, the project will be correctly named <code>client-hello</code>.
+</para>
+</section>
+
+<section>
+<info>
+    <title>Step 2: Initializing the CometD Client</title>
+</info>
+<para>
+    The skeleton project provides an almost empty JSP page and a default CometD server.
+    In order to be able to send a message to the CometD server, you need to write a JavaScript file
+    (your CometD client application) where you setup the CometD client to connect to the CometD server.
+    Once connected, you will send a "Hello, World" message to the server.
+</para>
+<para>
+    Open the project (now in the <code>client-hello</code> directory) in your favorite IDE, then
+    open the <code>src/main/webapp/index.jsp</code> file (provided by the skeleton webapp).
+    This file is the first file that will be downloaded to the browser when you run the tutorial,
+    and it is from this file that you need to trigger the loading of the JavaScript file(s) that constitute
+    your CometD client application.
+</para>
+<para>
+    Modify the following line from:
+</para>
+<example>
+<title>index.jsp</title>
+<programlisting language="html"><![CDATA[
+<html>
+...
+<script data-dojo-config="async: true, tlmSiblingOfDojo: true"
+        src="${pageContext.request.contextPath}/dojo/dojo.js.uncompressed.js"></script>
+...
+</html>
+]]></programlisting>
+</example>
+<para>
+    to:
+</para>
+<example>
+<title>index.jsp</title>
+<programlisting language="html"><![CDATA[
+<html>
+...
+<script data-dojo-config="async: true, tlmSiblingOfDojo: true, deps: ['application.js']"
+        src="${pageContext.request.contextPath}/dojo/dojo.js.uncompressed.js"></script>
+...
+</html>
+]]></programlisting>
+</example>
+<para>
+    Note how the <code>deps</code> field was added in the <code>data-dojo-config</code> attribute.
+    This tells Dojo to load the dependencies listed by the <code>deps</code> field, in this case
+    the file named <code>application.js</code>.
+    This file is still missing, but you will be writing it next.
+</para>
+<para>
+    In the IDE, create the <code>src/main/webapp/application.js</code> file with the following content:
+</para>
+<example>
+<title>application.js</title>
+<programlisting language="javascript"><![CDATA[
+require(['dojox/cometd'], function(cometd)
+{
+    cometd.configure({
+        url: location.protocol + '//' + location.host + config.contextPath + '/cometd',
+        logLevel: 'info'
+    });
+
+    cometd.handshake();
+});
+]]></programlisting>
+</example>
+<para>
+    Make use of Dojo's <code>require()</code> function to declare the dependencies you need; in this
+    case you need the <code>cometd</code> object provided by the CometD Dojo binding via the
+    <code>dojox/cometd</code> dependency, that is passed as argument to the anonymous function.
+</para>
+<para>
+    In the anonymous function, configure the CometD object, specifying the CometD server URL
+    (by appending the right pieces to avoid to hard-code the URL), and by specifying the log level of
+    the CometD JavaScript library.
+    The log level specified is <code>info</code>, but you can specify <code>debug</code> to obtain a
+    lot of detailed logging information, although sometimes the debug information is too much - try
+    and find the best setting for you.
+</para>
+<para>
+    After having configured the CometD object, call <code>handshake()</code> in order to start the
+    attempt to establish the connection with the CometD server.
+    Remember that the <code>handshake()</code> call is asynchronous and as such returns immediately
+    without telling whether the handshake was successful or not.
+</para>
+<para>
+    In order to detect whether the handshake was successful, you need to register a listener on the
+    <code>/meta/handshake</code> channel.
+    This listener will receive handshake responses indicating whether they have been successful or not.
+    Modify <code>application.js</code> accordingly:
+</para>
+<example>
+<title>application.js</title>
+<programlisting language="javascript"><![CDATA[
+require(['dojox/cometd', 'dojo/dom', 'dojo/domReady!'], function(cometd, dom)
+{
+    cometd.configure({
+        url: location.protocol + '//' + location.host + config.contextPath + '/cometd',
+        logLevel: 'debug'
+    });
+
+    cometd.addListener('/meta/handshake', function(message)
+    {
+        if (message.successful)
+        {
+            dom.byId('status').innerHTML += '<div>CometD handshake successful</div>';
+        }
+        else
+        {
+            dom.byId('status').innerHTML += '<div>CometD handshake failed</div>';
+        }
+    });
+
+    cometd.handshake();
+});
+]]></programlisting>
+</example>
+<para>
+
+</para>
+</section>
+
+<section>
+<info>
+<title>Step 3: Sending CometD Messages</title>
+</info>
+<para>
+    In order to send CometD messages to the server, you need a way to bind a user event, such as a button click,
+    to the sending of the message using the CometD API.
+</para>
+<para>
+    First, add a button to the <code>index.jsp</code> page, giving it the id of "greeter":
+</para>
+<example>
+<title>index.jsp</title>
+<programlisting language="html"><![CDATA[
+<!DOCTYPE html>
+<html>
+<head>
+    <meta http-equiv="Content-Type" content="text/html;charset=utf-8" />
+    <script data-dojo-config="async: true, tlmSiblingOfDojo: true, deps: ['application.js']"
+            src="${pageContext.request.contextPath}/dojo/dojo.js.uncompressed.js"></script>
+    <%--
+    The reason to use a JSP is that it is very easy to obtain server-side configuration
+    information (such as the contextPath) and pass it to the JavaScript environment on the client.
+    --%>
+    <script type="text/javascript">
+        var config = {
+            contextPath: '${pageContext.request.contextPath}'
+        };
+    </script>
+    <title>CometD Tutorial</title>
+</head>
+<body>
+
+    <h2>CometD Tutorial</h2>
+
+    <div id="status"></div>
+
+    <button id="greeter">
+        Send Hello to Server
+    </button>
+
+</body>
+</html>
+]]></programlisting>
+</example>
+<para>
+    Then, bind the greeter button to a function in <code>application.js</code>:
+</para>
+<example>
+<title>application.js</title>
+<programlisting language="javascript"><![CDATA[
+require(['dojox/cometd', 'dojo/dom', 'dojo/domReady!'], function(cometd, dom)
+{
+    cometd.configure({
+        url: location.protocol + '//' + location.host + config.contextPath + '/cometd',
+        logLevel: 'debug'
+    });
+
+    cometd.addListener('/meta/handshake', function(message)
+    {
+        if (message.successful)
+        {
+            dom.byId('status').innerHTML += '<div>CometD handshake successful</div>';
+        }
+        else
+        {
+            dom.byId('status').innerHTML += '<div>CometD handshake failed</div>';
+        }
+    });
+
+    dom.byId('greeter').onclick = function()
+    {
+        cometd.publish('/service/hello', 'Hello, World');
+    };
+
+    cometd.handshake();
+});
+]]></programlisting>
+</example>
+<para>
+    You have bound the <code>onclick</code> event of the greeter button to an anonymous function
+    that calls <code>cometd.publish(...)</code>.
+</para>
+<para>
+    The first argument of <code>cometd.publish(...)</code> is the channel name; the second argument
+    is the data that you want to send to the server. In this case it is a string, but it could well be
+    a JavaScript object:
+</para>
+<informalexample>
+<programlisting language="javascript"><![CDATA[
+cometd.publish('/service/hello', {
+    text: 'Hello, World',
+    sender: 'tutorial'
+});
+]]></programlisting>
+</informalexample>
+<para>
+    The channel name is <code>/service/hello</code>, and therefore the channel is a service channel
+    (for further information about channels, see <?reference?>).
+    Remember that messages received by the server on a service channel are not broadcasted to other clients.
+    The reason to use a service channel and not, for example, a broadcast channel such as <code>/hello</code>
+    is that we want to say hello to the server, not to all the clients that may be listening on the
+    <code>/hello</code> channel.
+</para>
+</section>
+
+<section>
+<info>
+<title>Step 4: Receiving CometD Messages</title>
+</info>
+<para>
+    On the server side, you would like to receive greeting messages from clients and be able to perform
+    some action when such messages are received. In CometD, you do so via services (for more information
+    about services, see <?reference?>), and in particular, you will use annotated services.
+</para>
+<para>
+    A annotated service is a Java class annotated with CometD annotations that is declared in <code>web.xml</code>
+    as a parameter of CometD's <classname>org.cometd.annotation.AnnotationCometdServlet</classname>.
+</para>
+<para>
+    Modify <code>web.xml</code> by adding the "services" init parameter to the <code>AnnotationCometdServlet</code>,
+    specifying the full qualified name of the service class:
+</para>
+<example>
+<title>web.xml</title>
+<programlisting language="xml"><![CDATA[
+<?xml version="1.0" encoding="UTF-8"?>
+<web-app ...>
+    <servlet>
+        <servlet-name>cometd</servlet-name>
+        <servlet-class>org.cometd.annotation.AnnotationCometdServlet</servlet-class>
+        ...
+        <init-param>
+            <param-name>services</param-name>
+            <param-value>org.cometd.tutorials.ClientHelloService</param-value>
+        </init-param>
+        ...
+    </servlet>
+    ...
+</web-app>
+]]></programlisting>
+</example>
+<para>
+    Then create the service class as <code>src/main/java/org/cometd/tutorials/ClientHelloService.java</code>:
+</para>
+<example>
+<title>ClientHelloService.java</title>
+<programlisting language="java"><![CDATA[
+@Service
+public class ClientHelloService
+{
+    @Listener("/service/hello")
+    public void processClientHello(ServerSession session, ServerMessage message)
+    {
+        System.out.printf("Received greeting '%s' from remote client %s%n", message.getData(), session.getId());
+    }
+}
+]]></programlisting>
+</example>
+<para>
+    The <code>ClientHelloService</code> annotates method <code>processClientHello(...)</code> to be invoked
+    when a message is received by the server on channel <code>/service/hello</code>.
+    Method <code>processClientHello(...)</code> simply prints on the console the greeting received.
+</para>
+</section>
+
+<section>
+<info>
+<title>Step 5: Running the Tutorial</title>
+</info>
+<para>
+    You can now deploy the tutorial web application to a servlet container and try it out.
+    You will use Maven to build the tutorial web application, and the Jetty Maven plugin to deploy and run it.
+</para>
+<para>
+    Open a terminal window and type the following commands to build the tutorial web application:
+</para>
+<screen>
+$ cd client-hello
+$ mvn install
+</screen>
+<para>
+    The output should look like this:
+</para>
+<screen>
+[INFO] Scanning for projects...
+...
+[INFO] ------------------------------------------------------------------------
+[INFO] BUILD SUCCESS
+[INFO] ------------------------------------------------------------------------
+...
+</screen>
+
+<para>
+    Now type this command to deploy and run the tutorial web application:
+</para>
+<screen>
+$ mvn jetty:run
+</screen>
+<para>
+    The output should look like this:
+</para>
+<screen>
+[INFO] Scanning for projects...
+...
+yyyy-MM-dd HH:mm:ss.SSS:INFO:oejs.AbstractConnector:Started SelectChannelConnector@0.0.0.0:8080
+[INFO] Started Jetty Server
+</screen>
+<para>
+    Now the server is up and running, with the tutorial web application deployed on the root context.
+    Start your favorite browser and open the URL http://localhost:8080, you should see the following page:
+</para>
+<mediaobject>
+    <imageobject>
+        <imagedata fileref="client-hello.png" />
+    </imageobject>
+</mediaobject>
+<para>
+    You can now click on the button to send a message to the server, and if you look at the terminal window
+    you should see the log message printed by the <code>ClientHelloService</code> (the client ID may be different):
+</para>
+<screen>
+...
+Received greeting 'Hello, World' from remote client 2qydk1xpao8t55fpukh0a8vc
+...
+</screen>
+</section>
+
+<section>
+<info>
+<title>Conclusions</title>
+</info>
+<para>
+    In this tutorial, you have seen:
+</para>
+<itemizedlist>
+<listitem>
+<para>How to initialize the CometD JavaScript client in a JSP page using Dojo</para>
+</listitem>
+<listitem>
+<para>How to handshake and publish a message to a channel using the CometD JavaScript API</para>
+</listitem>
+<listitem>
+<para>How to write a simple CometD service that receives the message and prints it on the terminal window</para>
+</listitem>
+</itemizedlist>
+</section>
+
+</chapter>
