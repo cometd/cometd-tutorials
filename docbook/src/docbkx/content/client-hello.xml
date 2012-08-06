@@ -39,7 +39,7 @@
     Open a terminal window and type the following commands:
 </para>
 <screen>
-$ git clone http://github.com/cometd/tutorials-skeleton client-hello
+$ git clone https://github.com/cometd/cometd-tutorials-skeleton.git client-hello
 $ cd client-hello
 </screen>
 <para>
@@ -136,7 +136,7 @@ $ cd client-hello
 <example>
 <title>application.js</title>
 <programlisting language="javascript"><![CDATA[
-require(['dojox/cometd'], function(cometd)
+require(['dojox/cometd', 'dojo/domReady!'], function(cometd)
 {
     cometd.configure({
         url: location.protocol + '//' + location.host + config.contextPath + '/cometd',
@@ -151,6 +151,11 @@ require(['dojox/cometd'], function(cometd)
     Make use of Dojo's <code>require()</code> function to declare the dependencies you need; in this
     case you need the <code>cometd</code> object provided by the CometD Dojo binding via the
     <code>dojox/cometd</code> dependency, that is passed as argument to the anonymous function.
+</para>
+<para>
+    You also need the code to be executed when the DOM document of the HTML page is ready, and therefore
+    you need to use the <link xl:href="https://dojotoolkit.org/reference-guide/1.7/dojo/domReady.html">
+    <code>dojo/domReady!</code></link> dependency.
 </para>
 <para>
     In the anonymous function, configure the CometD object, specifying the CometD server URL
@@ -179,7 +184,7 @@ require(['dojox/cometd', 'dojo/dom', 'dojo/domReady!'], function(cometd, dom)
 {
     cometd.configure({
         url: location.protocol + '//' + location.host + config.contextPath + '/cometd',
-        logLevel: 'debug'
+        logLevel: 'info'
     });
 
     cometd.addListener('/meta/handshake', function(message)
@@ -199,7 +204,9 @@ require(['dojox/cometd', 'dojo/dom', 'dojo/domReady!'], function(cometd, dom)
 ]]></programlisting>
 </example>
 <para>
-
+    Note how for this step the <code>require(...)</code> statement changed and now declares one more
+    dependencies, to <code>dojo/dom</code>, that is used to obtain the Dojo object that allows us to
+    manipulate the DOM of the HTML page.
 </para>
 </section>
 
@@ -289,7 +296,7 @@ require(['dojox/cometd', 'dojo/dom', 'dojo/domReady!'], function(cometd, dom)
 <para>
     The first argument of <code>cometd.publish(...)</code> is the channel name; the second argument
     is the data that you want to send to the server. In this case it is a string, but it could well be
-    a JavaScript object:
+    a JavaScript object, for example:
 </para>
 <informalexample>
 <programlisting language="javascript"><![CDATA[
