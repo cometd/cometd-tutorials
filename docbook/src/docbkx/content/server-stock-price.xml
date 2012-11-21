@@ -1,0 +1,437 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<chapter version="5.0"
+         xmlns="http://docbook.org/ns/docbook"
+         xmlns:xi="http://www.w3.org/2001/XInclude"
+         xmlns:xl="http://www.w3.org/1999/xlink"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://docbook.org/ns/docbook http://www.docbook.org/xml/5.0/xsd/docbook.xsd
+                             http://www.w3.org/2001/XInclude http://www.w3.org/2001/XInclude.xsd
+                             http://www.w3.org/1999/xlink http://docbook.org/xml/5.0/xsd/xlink.xsd"
+         xml:id="server_stock_price">
+<info>
+    <title>Tutorial: Server-Side Stock Price Notification</title>
+</info>
+<section xml:id="server_stock_price_introduction">
+<info>
+    <title>Introduction</title>
+</info>
+<para>
+    In this CometD tutorial you will learn how to send simulated stock price updates from the CometD server
+    to CometD clients.
+    In doing this, you will primarily learn how to use the CometD Server Java API, although you will see also
+    how to setup the client-side that listens to the stock price update messages.
+</para>
+</section>
+
+<section>
+<info>
+    <title>Requirements</title>
+</info>
+<para>
+    See <xref linkend="introduction_requirements" />.
+</para>
+</section>
+
+<section xml:id="server_stock_price_setup">
+<info>
+    <title>Step 1: Setting up the Project</title>
+</info>
+<para>
+    Start by cloning the skeleton tutorial project into the <code>server-stock-price</code> directory.
+    Open a terminal window and type the following commands:
+</para>
+<screen>
+$ git clone https://github.com/cometd/cometd-tutorials-skeleton.git server-stock-price
+$ cd server-stock-price
+</screen>
+<para>
+    The tutorial will modify the skeleton project, enriching it with the code and configuration needed
+    by this tutorial.
+</para>
+<para>
+    Modify the <code>project/artifactId</code> element in the <code>pom.xml</code> file from:
+</para>
+<informalexample>
+<programlisting language="xml">
+&lt;?xml version="1.0" encoding="UTF-8"?&gt;
+&lt;project xmlns="http://maven.apache.org/POM/4.0.0"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd"&gt;
+    ...
+    &lt;artifactId&gt;<emphasis>cometd-tutorials-skeleton</emphasis>&lt;/artifactId&gt;
+    ...
+&lt;/project&gt;
+</programlisting>
+</informalexample>
+<para>
+    to:
+</para>
+<programlisting language="xml"><![CDATA[
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+    ...
+    <artifactId>server-stock-price</artifactId>
+    ...
+</project>
+]]></programlisting>
+<para>
+    In this way, the project will be correctly named <code>server-stock-price</code>, then open the
+    project (now in the <code>server-stock-price</code> directory) in your favorite IDE.
+</para>
+</section>
+
+<section xml:id="server_stock_price_services">
+<info>
+<title>Step 2: Writing the Server-Side Services</title>
+</info>
+<para>
+    In order to notify clients of stock price updates, you need two server-side components:
+</para>
+<itemizedlist>
+<listitem>
+<para>a stock price emitter that emits stock price updates</para>
+</listitem>
+<listitem>
+<para>a CometD service that receives stock price updates from the stock price emitter and forwards them to clients</para>
+</listitem>
+</itemizedlist>
+<para>
+    The reason to keep these two components separated is to emphasize the fact that the stock price emitter
+    belongs to the "domain" of your application, while the CometD service is the practical implementation
+    that you use to notify clients of stock price updates.
+</para>
+<para>
+    Create the <classname>StockPriceEmitter</classname> in
+    <code>src/main/java/org/cometd/tutorials/StockPriceEmitter.java</code> as follows:
+</para>
+<example>
+<title>StockPriceEmitter.java</title>
+<programlisting language="java">
+
+<xi:include
+    href="https://raw.github.com/cometd/cometd-tutorials/master/server-stock-price/src/main/java/org/cometd/tutorials/StockPriceEmitter.java"
+    parse="text" />
+</programlisting>
+</example>
+<para>
+    The <classname>StockPriceEmitter</classname> is a simple class that allows listeners interested in
+    stock price changes to register to be notified of updates. It uses a scheduler to simulate random delays
+    between stock price changes, that are encapsulated into <classname>StockPriceEmitter.Update</classname>
+    objects notified to <classname>StockPriceEmitter.Listener</classname> instances.
+</para>
+<para>
+    The stock updates are emitted at a relatively high rate, with a delay between updates chosen randomly
+    between 0 and 1000 milliseconds.
+</para>
+<para>
+    Think of the <classname>StockPriceEmitter</classname> as your business class that knows nothing about
+    CometD, and that just emits stock price updates.
+</para>
+<para>
+    Next, the CometD service. The CometD service is interested in knowing stock price updates because
+    it needs to notify stock price changes to clients, and therefore will implement
+    <classname>StockPriceEmitter.Listener</classname>.
+</para>
+<para>
+    CometD services are the common way to implement server-side activity in CometD, and annotated CometD
+    services are very simple to use.
+</para>
+<para>
+    Create the annotated CometD service <classname>StockPriceService</classname> in
+    <code>src/main/java/org/cometd/tutorials/StockPriceService.java</code> as follows:
+</para>
+<example>
+<title>StockPriceService.java</title>
+<programlisting language="java">
+<xi:include
+    href="https://raw.github.com/cometd/cometd-tutorials/master/server-stock-price/src/main/java/org/cometd/tutorials/StockPriceService.java"
+    parse="text" />
+</programlisting>
+</example>
+<para>
+    The <classname>StockPriceService</classname> iterates over the stock price updates, and for each update:
+</para>
+<orderedlist>
+<listitem>
+<para>Creates the channel name dynamically based on the stock symbol</para>
+</listitem>
+<listitem>
+<para>Initializes a <classname>ServerChannel</classname> with the channel name just created</para>
+</listitem>
+<listitem>
+<para>
+    Converts the domain specific <classname>StockPriceEmitter.Update</classname> objects to a format
+    that is suitable for CometD
+</para>
+</listitem>
+<listitem>
+<para>Broadcasts the update to all subscribers of that channel</para>
+</listitem>
+</orderedlist>
+<para>
+    Channel names have the form, for example, of <code>/stock/GOOG</code> or <code>/stock/MSFT</code>.
+    This allows clients to subscribe and be notified for changes of a particular stock symbol (and not all of them).
+    If the client wants to be notified of stock price updates for all symbols, it just have to subscribe
+    to <code>/stock/*</code>.
+</para>
+<para>
+    For this particular tutorial, the number of channels is not a problem (only few), but deciding the channel
+    names is an important design step of a CometD application.
+    In the stock domain, it is easy to have thousands of symbols (for example, there are roughly
+    7800 Nasdaq stock symbols).
+    While CometD scales well with the number of channels, and a few thousands of channels is not a problem,
+    having too many channels has an effect on memory occupation and increases the work of the garbage collector.
+    Most often, applications can go by using only a few channels, say in the orders of tens or hundreds.
+    Even for applications in the stock domain, it is probably true that the most active symbols are in the order
+    of hundreds, not thousands.
+</para>
+<para>
+    <classname>ServerChannel</classname>s need to be initialized before being used. In this tutorial you need to
+    initialize them to be <emphasis>persistent</emphasis> to make sure that the channel exists even if it has no
+    subscribers. This is just an optimization to avoid null checks everywhere in your code.
+</para>
+<para>
+    The <classname>ServerChannel</classname>s are also configured to be <emphasis>lazy</emphasis>.
+    Because the stock updates are emitted at a relatively high rate, you want to use the optimization of making
+    the <classname>ServerChannel</classname>s lazy to avoid that updates flow to clients too often for the user
+    to even notice. For more information about lazy channels, see <?reference?>.
+</para>
+<para>
+    The conversion from the domain object <classname>StockPriceEmitter.Update</classname> into a
+    <classname>Map</classname> is needed because CometD messages must be in JSON format.
+    A <classname>Map</classname> has a natural conversion to JSON, while domain objects may not have this
+    natural conversion.
+</para>
+<para>
+    However, CometD is very flexible in allowing domain objects to be converted into JSON automatically.
+    CometD supports pluggable JSON libraries and the most common are Jetty's own JSON library and
+    <link xl:href="http://jackson.codehaus.org">Jackson</link>.
+    In both these libraries you can choose "invasive" solutions like having the domain class implement
+    some JSON library specific interface (or be annotated with JSON library specific annotations), or
+    "non-invasive" solutions like implementing serializers/converters for your domain classes.
+    For simplicity, in this tutorial you performed a manual conversion.
+</para>
+</section>
+
+<section xml:id="server_stock_price_server">
+<info>
+    <title>Step 3: Configuring the Server-Side Services</title>
+</info>
+<para>
+    Now that you have written the server-side services, in this step you will configure and wire them up.
+    In particular, you need to instantiate the <classname>StockPriceEmitter</classname> service and the
+    <classname>StockPriceService</classname>, and register the latter as a listener of the former.
+</para>
+<para>
+    Because you need the extra configuration step of registering the <classname>StockPriceService</classname>
+    as a listener of <classname>StockPriceEmitter</classname>, you cannot just rely on
+    <classname>AnnotationCometdServlet</classname> to instantiate the CometD services for us.
+    In CometD web applications it is typical to write an <emphasis>initializer</emphasis> that performs
+    the instantiation and the wiring of services. The most common form for the initializer is that of a servlet.
+</para>
+<para>
+    Create the initializer servlet as <code>src/main/java/org/cometd/tutorials/Initializer.java</code>
+</para>
+<example>
+<title>Initializer.java</title>
+<programlisting language="java">
+<xi:include
+    href="https://raw.github.com/cometd/cometd-tutorials/master/server-stock-price/src/main/java/org/cometd/tutorials/Initializer.java"
+    parse="text" />
+</programlisting>
+</example>
+<para>
+    The <classname>Initializer</classname> creates the <classname>StockPriceEmitter</classname>
+    (assigning it to a field to prevent its garbage collection), then retrieves the
+    <classname>StockPriceService</classname> (created by the <classname>AnnotationCometdServlet</classname>)
+    and registers it as a listener of <classname>StockPriceEmitter</classname>.
+</para>
+<para>
+    CometD services created by <classname>AnnotationCometdServlet</classname> are registered as
+    servlet context attributes under their fully qualified name.
+</para>
+<para>
+    Create the web application descriptor as <code>src/main/webapp/WEB-INF/web.xml</code>:
+</para>
+<example>
+<title>web.xml</title>
+<programlisting language="xml">
+<xi:include
+    href="https://raw.github.com/cometd/cometd-tutorials/master/server-stock-price/src/main/webapp/WEB-INF/web.xml"
+    parse="text" />
+</programlisting>
+</example>
+<para>
+    Note how you specified <code>load-on-startup</code> to be <code>1</code> for the
+    <classname>AnnotationCometdServlet</classname> and to be <code>2</code> for the
+    <classname>Initializer</classname>.
+    This startup order guarantees that the CometD framework and the
+    <classname>StockPriceService</classname> are already initialized and configured when
+    the <classname>Initializer</classname> runs.
+    Failing to specify a startup order may result in the <classname>Initializer</classname> to not
+    find the <classname>StockPriceService</classname> as servlet context attribute
+    with the result that the system will not be wired up correctly.
+</para>
+<para>
+    You also specified the <code>maxLazyTimeout</code> parameter. This parameter controls the timeout of
+    lazy channels, so that stock price updates are not broadcasted too frequently.
+    The reason for doing this is that too frequent updates may not be noticed by users and cause
+    unnecessary increased load on the server.
+</para>
+</section>
+
+<section xml:id="server_stock_price_client">
+<info>
+    <title>Step 4: Initializing the CometD Client</title>
+</info>
+<para>
+    In order to be able to receive stock price updates from the CometD server, you need to write a JavaScript file
+    (your CometD client application) where you setup the CometD client to connect to the CometD server
+    and subscribe to the stock symbols that you are interested in.
+</para>
+<para>
+    Open the project (now in the <code>server-stock-price</code> directory) in your favorite IDE, then
+    open the <code>src/main/webapp/index.jsp</code> file (provided by the skeleton webapp).
+    This file is the first file that will be downloaded to the browser when you run the tutorial,
+    and it is from this file that you need to trigger the loading of the JavaScript file(s) that constitute
+    your CometD client application.
+</para>
+<para>
+    Modify the <code>index.jsp</code> file to add the <code>deps</code> field that specify the
+    application's JavaScript file - <code>application.js</code>, like so:
+</para>
+<example>
+<title>index.jsp</title>
+<programlisting language="html">
+<xi:include
+    href="https://raw.github.com/cometd/cometd-tutorials/master/server-stock-price/src/main/webapp/index.jsp"
+    parse="text" />
+</programlisting>
+</example>
+<para>
+    Next, in the IDE, create the <code>src/main/webapp/application.js</code> file with the following content:
+</para>
+<example>
+<title>application.js</title>
+<programlisting language="javascript">
+<xi:include
+    href="https://raw.github.com/cometd/cometd-tutorials/master/server-stock-price/src/main/webapp/application.js"
+    parse="text" />
+</programlisting>
+</example>
+<para>
+    Make use of Dojo's <code>require()</code> function to declare the dependencies you need; in this
+    case you need the <code>cometd</code> object provided by the CometD Dojo binding via the
+    <code>dojox/cometd</code> dependency, the <code>dom</code> object provided by Dojo to read the DOM and
+    the <code>doc</code> object provided by Dojo to update the DOM.
+    These objects are passed as arguments to the anonymous function.
+</para>
+<para>
+    You also need the code to be executed when the DOM document of the HTML page is ready, and therefore
+    you need to use the <link xl:href="https://dojotoolkit.org/reference-guide/1.7/dojo/domReady.html">
+    <code>dojo/domReady!</code></link> dependency.
+</para>
+<para>
+    In the anonymous function, configure the CometD object, specifying the CometD server URL
+    (by appending the right pieces to avoid to hard-code the URL), and by specifying the log level of
+    the CometD JavaScript library.
+    The log level specified is <code>info</code>, but you can specify <code>debug</code> to obtain a
+    lot of detailed logging information, although sometimes the debug information is too much - try
+    and find the best setting for you.
+</para>
+<para>
+    In this tutorial, you want browsers to receive stock price updates, and for this you need to
+    subscribe to the <code>/stock/*</code> channel.
+    The right place to perform subscriptions to channels is from a <code>/meta/handshake</code>
+    listener, when the handshake is successful.
+</para>
+<para>
+    Therefore you subscribe to the <code>/stock/*</code> channel, and provide a subscription function
+    to be called when a message arrives on such channels.
+    In the subscription function, we just lookup the <code>div</code> element for the given stock
+    symbol (or create it if it's missing), and update the price it is showing.
+</para>
+</section>
+
+<section xml:id="server_stock_price_running">
+<info>
+<title>Step 5: Running the Tutorial</title>
+</info>
+<para>
+    You can now deploy the tutorial web application to a servlet container and try it out.
+    You will use Maven to build the tutorial web application, and the Jetty Maven plugin to deploy and run it.
+</para>
+<para>
+    Open a terminal window and type the following commands to build the tutorial web application:
+</para>
+<screen>
+$ cd server-stock-price
+$ mvn install
+</screen>
+<para>
+    The output should look like this:
+</para>
+<screen>
+[INFO] Scanning for projects...
+...
+[INFO] ------------------------------------------------------------------------
+[INFO] BUILD SUCCESS
+[INFO] ------------------------------------------------------------------------
+...
+</screen>
+
+<para>
+    Now type this command to deploy and run the tutorial web application:
+</para>
+<screen>
+$ mvn jetty:run
+</screen>
+<para>
+    The output should look like this:
+</para>
+<screen>
+[INFO] Scanning for projects...
+...
+yyyy-MM-dd HH:mm:ss.SSS:INFO:oejs.AbstractConnector:Started SelectChannelConnector@0.0.0.0:8080
+[INFO] Started Jetty Server
+</screen>
+<para>
+    Now the server is up and running, with the tutorial web application deployed on the root context.
+    Start your favorite browser and open the URL http://localhost:8080, you should see the following page:
+</para>
+<mediaobject>
+    <imageobject>
+        <imagedata fileref="server-stock-price.png" />
+    </imageobject>
+</mediaobject>
+<para>
+    You can now watch the stock prices change at a regular intervals.
+    The rate of updates of the stock prices is determined by the <code>maxLazyInterval</code>,
+    by the rules of lazy channel updates (see <?reference?>), but also by internal CometD optimizations.
+    Do not expect the interval between updates to be exactly equal to <code>maxLazyInterval</code>.
+</para>
+</section>
+
+<section xml:id="server_stock_price_conclusions">
+<info>
+<title>Conclusions</title>
+</info>
+<para>
+    In this tutorial, you have seen:
+</para>
+<itemizedlist>
+<listitem>
+<para>How to simulate a server-side service that emits stock price updates</para>
+</listitem>
+<listitem>
+<para>How to write a CometD service that listen for stock price updates and broadcasts them to browsers</para>
+</listitem>
+<listitem>
+<para>How to write a simple CometD client that shows stock price updates in the browser</para>
+</listitem>
+</itemizedlist>
+</section>
+
+</chapter>

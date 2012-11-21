@@ -44,5 +44,6 @@
 
 <xi:include href="content/introduction.xml"/>
 <xi:include href="content/client-hello.xml"/>
+<xi:include href="content/server-stock-price.xml"/>
 
 </book>
