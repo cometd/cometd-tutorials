@@ -1,6 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <chapter version="5.0"
          xmlns="http://docbook.org/ns/docbook"
+         xmlns:xi="http://www.w3.org/2001/XInclude"
          xmlns:xl="http://www.w3.org/1999/xlink"
          xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
          xsi:schemaLocation="http://docbook.org/ns/docbook http://www.docbook.org/xml/5.0/xsd/docbook.xsd
@@ -357,17 +358,11 @@ cometd.publish('/service/hello', {
 </para>
 <example>
 <title>ClientHelloService.java</title>
-<programlisting language="java"><![CDATA[
-@Service
-public class ClientHelloService
-{
-    @Listener("/service/hello")
-    public void processClientHello(ServerSession session, ServerMessage message)
-    {
-        System.out.printf("Received greeting '%s' from remote client %s%n", message.getData(), session.getId());
-    }
-}
-]]></programlisting>
+<programlisting language="java">
+<xi:include
+    href="https://raw.github.com/cometd/cometd-tutorials/master/client-hello/src/main/java/org/cometd/tutorials/ClientHelloService.java"
+    parse="text" />
+</programlisting>
 </example>
 <para>
     The <code>ClientHelloService</code> annotates method <code>processClientHello(...)</code> to be invoked
