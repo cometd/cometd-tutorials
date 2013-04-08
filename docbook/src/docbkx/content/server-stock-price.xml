@@ -109,7 +109,6 @@ $ cd server-stock-price
 <example>
 <title>StockPriceEmitter.java</title>
 <programlisting language="java">
-
 <xi:include
     href="https://raw.github.com/cometd/cometd-tutorials/master/server-stock-price/src/main/java/org/cometd/tutorials/StockPriceEmitter.java"
     parse="text" />
