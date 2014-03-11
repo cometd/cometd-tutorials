@@ -46,7 +46,7 @@
         <dependency>
             <groupId>org.cometd.tutorials</groupId>
             <artifactId>cometd-tutorials-skeleton</artifactId>
-            <version>1.0.0</version>
+            <version>${project.version}</version>
             <type>war</type>
         </dependency>
     </dependencies>
